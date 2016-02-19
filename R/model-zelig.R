@@ -110,7 +110,10 @@ z <- setRefClass("Zelig", fields = list(fn = "ANY", # R function to call to wrap
                                         mcformula = "ANY",
                                         
                                         # Feedback
-                                        with.feedback = "logical"))
+                                        with.feedback = "logical",
+                                        # Summary (to allow for texreg and stargazer output)
+                                        summary = "ANY"
+                                        ))
 
 z$methods(
   initialize = function() {
@@ -549,10 +552,13 @@ z$methods(
         cat("---\nSignif. codes:  '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n")
         cat("\n")
         cat("For results from individual imputed datasets, use summary(x, subset = i:j)\n")
+        .self$summary <- results
+        return(results)
       }else if ((.self$mi) & !is.null(subset)) {
         for(i in subset){
             cat("Imputed Dataset ",i,sep="")
             print(base::summary(.self$zelig.out$z.out[[i]]))
+            .self$summary <- base::summary(.self$zelig.out$z.out[[i]])
         }
       }else{
         summ <- .self$zelig.out %>%
@@ -568,9 +574,11 @@ z$methods(
               print(.[.self$by])
           }
           if("S4" %in% typeof(.$z.out)){  # Need to change summary method here for some classes
-              print(summary(.$z.out))    
+              print(summary(.$z.out))
+              .self$summary <- summary(.$z.out)
           }else{
               print(base::summary(.$z.out))
+              .self$summary <- base::summary(.$z.out)
           }
         })
       }
